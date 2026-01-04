@@ -5,30 +5,29 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, message } = await req.json();
 
-    // Basic validation
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: "All fields (name, email, message) are required." },
+        { error: "All fields are required." },
         { status: 400 }
       );
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid email address." },
+        { status: 400 }
+      );
     }
 
-    // Nodemailer transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD, // Use your Gmail App Password here
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
     });
 
-    // Email content
     const mailOptions = {
       from: `"${name}" <${email}>`,
       to: process.env.GMAIL_USER,
@@ -43,16 +42,48 @@ export async function POST(req: NextRequest) {
       `,
     };
 
-    // Send the email
     await transporter.sendMail(mailOptions);
     console.log(`[Contact Form] Email sent successfully from ${email}`);
 
-    return NextResponse.json({ success: true, message: "Message sent successfully!" });
+   
+    return NextResponse.json(
+      { success: true, message: "Message sent successfully!" },
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*", // allow all devices/origins
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
+    );
   } catch (error) {
     console.error("[Contact Form] Email sending error:", error);
     return NextResponse.json(
       { error: "Failed to send email. Please try again later." },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
     );
   }
+}
+
+// ⚠️ Handle preflight OPTIONS request for CORS
+export async function OPTIONS() {
+  return NextResponse.json(
+    { message: "CORS preflight" },
+    {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    }
+  );
 }
