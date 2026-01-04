@@ -5,10 +5,18 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, message } = await req.json();
 
+    // Validate input
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: "All fields are required." },
-        { status: 400 }
+        { error: "All fields (name, email, message) are required." },
+        {
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
@@ -16,10 +24,18 @@ export async function POST(req: NextRequest) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: "Invalid email address." },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        }
       );
     }
 
+    // Nodemailer transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -43,24 +59,28 @@ export async function POST(req: NextRequest) {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`[Contact Form] Email sent successfully from ${email}`);
+    console.log(`[Contact Form] Email sent from ${email}`);
 
-   
     return NextResponse.json(
       { success: true, message: "Message sent successfully!" },
       {
         status: 200,
         headers: {
-          "Access-Control-Allow-Origin": "*", // allow all devices/origins
+          "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         },
       }
     );
-  } catch (error) {
-    console.error("[Contact Form] Email sending error:", error);
+  } catch (error: any) {
+    console.error("[Contact Form] Error sending email:", error);
     return NextResponse.json(
-      { error: "Failed to send email. Please try again later." },
+      {
+        error:
+          error?.response?.code === "EAUTH"
+            ? "Email authentication failed. Check Gmail App Password."
+            : "Failed to send email. Please try again later.",
+      },
       {
         status: 500,
         headers: {
@@ -73,7 +93,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ⚠️ Handle preflight OPTIONS request for CORS
+// Handle CORS preflight
 export async function OPTIONS() {
   return NextResponse.json(
     { message: "CORS preflight" },
