@@ -12,25 +12,28 @@ const name = "POV YANGHAI".split("")
 const statusMap = {
   internship: {
     text: "Open to Internship Opportunities",
-    color: "green-500",
     tooltip: "Actively seeking internship roles",
   },
   remote: {
     text: "Available for Remote Work",
-    color: "blue-500",
     tooltip: "Can work remotely",
   },
   onsite: {
     text: "Available On-site",
-    color: "yellow-500",
     tooltip: "Can work on-site",
   },
+}
+
+const colorClasses: Record<string, string> = {
+  internship: "bg-green-500",
+  remote: "bg-blue-500",
+  onsite: "bg-yellow-500",
 }
 
 export default function Hero() {
   // Change this value to "remote" or "onsite" to switch badge
   const status = "internship"
-  const { text, color, tooltip } = statusMap[status]
+  const { text, tooltip } = statusMap[status]
 
   return (
     <section
@@ -92,7 +95,7 @@ export default function Hero() {
               animate={{ scale: [1, 1.3, 1] }}
               transition={{ repeat: Infinity, duration: 1.2 }}
             >
-              <span className={`relative inline-flex rounded-full h-3 w-3 bg-${color}`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${colorClasses[status]}`}></span>
             </motion.span>
             <span className="text-sm font-medium text-foreground">{text}</span>
 
